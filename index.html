@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LF 1 Selbsttest</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{--bg:#f3f6fc;--line:#d3ddf1;--card:#fff;--tx:#1a2233;--mu:#56627d;--bd:#c9d3e8;--ink:#1d3a8a;--ok:#1b7f45;--okb:#e3f5ea;--no:#c9302c;--nob:#fdecea;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121828;--line:#1f2943;--card:#1a2236;--tx:#e7ecf8;--mu:#9aa6c2;--bd:#34415f;--ink:#8fb0ff;--ok:#5ad08a;--okb:#163523;--no:#ff7b76;--nob:#3b1b1e}}
+:root[data-theme="dark"]{--bg:#121828;--line:#1f2943;--card:#1a2236;--tx:#e7ecf8;--mu:#9aa6c2;--bd:#34415f;--ink:#8fb0ff;--ok:#5ad08a;--okb:#163523;--no:#ff7b76;--nob:#3b1b1e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background-color:var(--bg);background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:24px 24px;color:var(--tx);font:17px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:680px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.9rem;line-height:1.15;margin:8px 0 6px;color:var(--ink)}
+.card{background:var(--card);border:1.5px solid var(--bd);border-radius:10px;padding:20px}
+p{margin:0 0 12px}
+.mu{color:var(--mu);font-size:.95rem}
+ul{margin:0 0 16px;padding-left:20px}
+button{font:inherit;cursor:pointer;color:inherit}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:12px 20px;font-weight:700}
+.btn.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0 14px}
+.bar i{display:block;height:100%;background:var(--ink);width:0;transition:width .3s}
+.top{display:flex;justify-content:space-between;font-size:.95rem;color:var(--mu)}
+h2{font-size:1.25rem;line-height:1.35;margin:4px 0 16px}
+.opt{display:block;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--bd);border-radius:8px;padding:12px 14px;margin-bottom:10px}
+.opt:not(:disabled):hover{border-color:var(--ink)}
+.opt:disabled{cursor:default}
+.opt.ok{border-color:var(--ok);background:var(--okb);font-weight:700}
+.opt.no{border-color:var(--no);background:var(--nob);text-decoration:line-through}
+.fb{border-left:5px solid;border-radius:6px;padding:12px 14px;margin:16px 0}
+.fb.ok{border-color:var(--ok);background:var(--okb)}
+.fb.no{border-color:var(--no);background:var(--nob)}
+.fb b{display:block;margin-bottom:4px}
+.big{font-size:2.6rem;font-weight:700;color:var(--ink);line-height:1.1}
+.w{border-top:1.5px solid var(--bd);padding:12px 0}
+.w:first-child{border:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.hide{display:none}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<div id="start">
+<h1>LF 1 – Selbsttest</h1>
+<p class="mu">Leitbild, Ziele, SMART, Porter und Kennzahlen</p>
+<div class="card">
+<p><b>So funktioniert’s:</b></p>
+<ul>
+<li>Pro Durchgang bekommst du <b>30 zufällige Fragen</b> aus einem Pool von <span id="n"></span> Fragen.</li>
+<li>Reihenfolge und Antworten werden bei jedem Start neu gemischt.</li>
+<li>Nach jeder Antwort siehst du sofort, was richtig oder falsch ist, plus die Erklärung.</li>
+<li>Am Ende bekommst du eine Auswertung deiner Fehler.</li>
+</ul>
+<button class="btn" id="go">Test starten</button>
+</div>
+</div>
+
+<div id="quiz" class="hide">
+<div class="top"><span id="cnt"></span><span id="sc"></span></div>
+<div class="bar"><i id="pb"></i></div>
+<div class="card">
+<h2 id="q"></h2>
+<div id="opts"></div>
+<div id="fb" class="hide"></div>
+<button class="btn hide" id="next">Weiter</button>
+</div>
+</div>
+
+<div id="end" class="hide">
+<h1>Auswertung</h1>
+<div class="card">
+<div class="big" id="res"></div>
+<p id="msg" class="mu"></p>
+<div id="wl"></div>
+<div class="row"><button class="btn" id="again">Neuer Durchgang (neue Auswahl)</button></div>
+</div>
+</div>
+</main>
+<script>
+// MC: [Frage, Erklärung, RICHTIG, falsch1, falsch2, falsch3]   Richtig/Falsch: [Aussage, true|false, Erklärung]
+const Q=[
+["Was ist ein Unternehmensleitbild?","Ein Leitbild ist die schriftliche Orientierung nach innen (Mitarbeiter) und außen (Kunden/Öffentlichkeit).","Schriftliche Orientierung nach innen und außen","Der gesetzlich vorgeschriebene Jahresabschluss","Eine Preisliste für Kunden","Ein Liefervertrag mit Lieferanten"],
+["Welche Frage gehört zu den 3 Grundfragen eines Leitbilds?","Die 3 Grundfragen: Wer sind wir? Wie handeln wir? Wo wollen wir hin?","Wo wollen wir hin?","Wie hoch ist unser Gewinn?","Wer ist unser größter Konkurrent?","Was kostet unser Produkt?"],
+["„Wer sind wir?“ betrifft im Leitbild …","„Wer sind wir?“ = Vision / Mission.","Vision / Mission","Werte & Grundsätze","Zukunftsorientierung","Kennzahlen"],
+["„Wie handeln wir?“ betrifft im Leitbild …","„Wie handeln wir?“ = Werte & Grundsätze.","Werte & Grundsätze","Vision / Mission","Zukunftsorientierung","Gewinnziele"],
+["„Wo wollen wir hin?“ betrifft im Leitbild …","„Wo wollen wir hin?“ = Zukunftsorientierung.","Zukunftsorientierung","Vision / Mission","Werte & Grundsätze","Lieferantenauswahl"],
+["Welcher Nutzen eines Leitbilds stimmt?","Nutzen: Orientierung, Image/Vertrauen, Entscheidungshilfe.","Orientierung und Entscheidungshilfe","Garantiert automatisch mehr Gewinn","Ersetzt die Arbeitsverträge","Senkt die Steuern"],
+["Ein Leitbild richtet sich nur an die Mitarbeiter.",false,"Falsch: Es richtet sich nach innen (Mitarbeiter) und außen (Kunden/Öffentlichkeit)."],
+["Stakeholder sind …","Stakeholder = Anspruchsgruppen mit Interesse am Unternehmen.","Anspruchsgruppen mit Interesse am Unternehmen","Nur die Anteilseigner","Nur die Kunden","Nur die Geschäftsführung"],
+["Wer ist ein interner Stakeholder?","Intern: Mitarbeiter, Führungskräfte, Eigentümer.","Mitarbeiter","Lieferanten","Banken","Der Staat"],
+["Wer ist ein externer Stakeholder?","Extern: Kunden, Lieferanten, Banken, Staat, Umwelt/Öffentlichkeit.","Banken","Eigentümer","Führungskräfte","Mitarbeiter"],
+["Eigentümer gehören zu den externen Stakeholdern.",false,"Falsch: Eigentümer sind interne Stakeholder (im Betrieb)."],
+["Die Umwelt/Öffentlichkeit zählt zu den externen Stakeholdern.",true,"Richtig: Extern = außerhalb des Betriebs."],
+["Welche 3 Zielarten gibt es?","Ökonomisch (Geld), ökologisch (Umwelt), sozial (Mensch).","Ökonomisch, ökologisch, sozial","Kurzfristig, mittelfristig, langfristig","Intern, extern, neutral","Primär, sekundär, tertiär"],
+["Welches ist ein ökonomisches Ziel?","Ökonomisch = Geld: Gewinn, Umsatz, Rentabilität, Marktanteil.","Rentabilität steigern","Ökostrom nutzen","Work-Life-Balance fördern","Papier sparen"],
+["CO2-Reduktion ist ein … Ziel.","CO2-Reduktion, Papier sparen, Ökostrom = ökologisch (Umwelt).","ökologisches","ökonomisches","soziales","technisches"],
+["Faire Löhne sind ein … Ziel.","Faire Löhne, sichere Arbeitsplätze, Work-Life-Balance = sozial (Mensch).","soziales","ökonomisches","ökologisches","rechtliches"],
+["Zielkomplementär (Zielharmonie) bedeutet …","Komplementär: Ziel A unterstützt Ziel B.","Ziel A unterstützt Ziel B","Ziel A behindert Ziel B","Ziel A hat keine Wirkung auf Ziel B","Ziel A ersetzt Ziel B"],
+["Zielkonkurrierend (Zielkonflikt) bedeutet …","Konkurrierend: Ziel A behindert Ziel B.","Ziel A behindert Ziel B","Ziel A unterstützt Ziel B","Ziel A hat keine Wirkung auf Ziel B","Beide Ziele sind identisch"],
+["Zielneutral (Zielindifferenz) bedeutet …","Neutral: Ziel A hat keine Auswirkung auf Ziel B.","Ziel A hat keine Auswirkung auf Ziel B","Ziel A unterstützt Ziel B","Ziel A behindert Ziel B","Ziel A ist wichtiger als Ziel B"],
+["Homeoffice einführen und dadurch Miete sparen – welche Zielbeziehung?","Das eine Ziel hilft dem anderen: zielkomplementär.","zielkomplementär","zielkonkurrierend","zielneutral","zielfremd"],
+["Lohnerhöhung für Mitarbeiter und Gewinn steigern – welche Zielbeziehung?","Höhere Löhne senken den Gewinn: zielkonkurrierend (Zielkonflikt).","zielkonkurrierend","zielkomplementär","zielneutral","zielharmonisch"],
+["Wasserspender anschaffen und IT-Sicherheit verbessern – welche Zielbeziehung?","Beide Ziele beeinflussen sich nicht: zielneutral.","zielneutral","zielkomplementär","zielkonkurrierend","zielharmonisch"],
+["Papier sparen und dadurch Kosten senken – welche Zielbeziehung?","Das ökologische Ziel unterstützt das ökonomische: zielkomplementär.","zielkomplementär","zielkonkurrierend","zielneutral","zielfremd"],
+["Zielharmonie und zielkomplementär meinen dasselbe.",true,"Richtig: Beide bedeuten, dass Ziel A Ziel B unterstützt."],
+["Ein Zielkonflikt ist ein zielneutrales Verhältnis.",false,"Falsch: Zielkonflikt = zielkonkurrierend (A behindert B). Neutral = keine Auswirkung."],
+["Wofür steht das „S“ in SMART?","S = Spezifisch (konkret benannt).","Spezifisch","Sicher","Schnell","Sozial"],
+["Wofür steht das „M“ in SMART?","M = Messbar (Kennzahl / Zahl).","Messbar","Mitarbeiterbezogen","Maximal","Modern"],
+["Wofür steht das „A“ in SMART?","A = Attraktiv / Akzeptiert (vom Team gewollt).","Attraktiv / Akzeptiert","Anspruchsvoll","Automatisch","Abgeschlossen"],
+["Wofür steht das „R“ in SMART?","R = Realistisch (machbar).","Realistisch","Rentabel","Regelmäßig","Rechtlich"],
+["Wofür steht das „T“ in SMART?","T = Terminiert (konkretes Datum / Deadline).","Terminiert","Teamorientiert","Technisch","Transparent"],
+["Welches Ziel ist SMART formuliert?","SMART = konkret, messbar, realistisch, mit Termin.","Bis 31.12. die Support-Tickets pro Stunde von 4 auf 6 steigern","Wir wollen besser werden","Irgendwann mehr Kunden gewinnen","Der Support soll schneller sein"],
+["Was fehlt im Ziel „Wir senken den Stromverbrauch um 10 %“?","Es gibt eine Zahl (messbar), aber keine Deadline: „T“ fehlt.","Der Termin (Terminiert)","Die Messbarkeit","Die Spezifität","Nichts, es ist vollständig SMART"],
+["Was ist ein Indikator?","Ein Indikator ist die Messgröße, der „Tacho“ für ein Ziel.","Eine Messgröße, die zeigt, wie weit ein Ziel erreicht ist","Ein Gesetz","Ein Unternehmensleitbild","Eine Anspruchsgruppe"],
+["Welcher Indikator passt zum Ziel „Stromverbrauch senken“?","kWh Stromverbrauch misst direkt den Verbrauch.","kWh Stromverbrauch","Support-Tickets pro Stunde","Kunden-Bewertungsnote","Anzahl der Mitarbeiter"],
+["Welcher Indikator passt zum Ziel „Kundenzufriedenheit steigern“?","Die Kunden-Bewertungsnote (1–5) misst die Zufriedenheit.","Kunden-Bewertungsnote 1–5","kWh Stromverbrauch","Papierverbrauch","Miete pro Monat"],
+["Welcher Indikator passt zum Ziel „Support effizienter machen“?","Support-Tickets pro Stunde zeigen die Bearbeitungsleistung.","Support-Tickets pro Stunde","Kunden-Bewertungsnote","CO2-Ausstoß","Eigenkapital"],
+["Wie lautet das Begründungs-Schema in der Klausur?","1. Kennzahl nennen, 2. warum sie zum Ziel passt, 3. Vorher-Nachher-Vergleich.","Kennzahl → Warum passt sie? → Vorher-Nachher-Vergleich","Vorher-Nachher → Kennzahl → Warum passt sie?","Warum passt sie? → Vorher-Nachher → Kennzahl","Ziel → Gewinn → Kennzahl"],
+["Welche ist eine primäre Aktivität nach Porter?","Primär: Inbound, Produktion, Outbound, Marketing & Vertrieb, Service.","Marketing & Vertrieb","Infrastruktur","Personalwirtschaft","Beschaffung"],
+["Welche ist eine unterstützende Aktivität nach Porter?","Unterstützend: Infrastruktur, Personalwirtschaft, Technologieentwicklung, Beschaffung.","Technologieentwicklung","Outbound-Logistik","Service / Kundendienst","Inbound-Logistik"],
+["Das Eingangslager gehört zu …","Eingangslager = Inbound-Logistik.","Inbound-Logistik","Outbound-Logistik","Beschaffung","Service"],
+["Einen Server aufbauen (Leistung erbringen) gehört zu …","Dienstleistung erbringen / Server aufbauen = Produktion / Operationen.","Produktion / Operationen","Technologieentwicklung","Service","Infrastruktur"],
+["Wartung und Support gehören zu …","Wartung / Support = Service / Kundendienst.","Service / Kundendienst","Produktion / Operationen","Personalwirtschaft","Beschaffung"],
+["Geschäftsführung, Buchhaltung und Recht gehören zu …","Das ist die Infrastruktur (unterstützende Aktivität).","Infrastruktur","Personalwirtschaft","Marketing & Vertrieb","Beschaffung"],
+["Der Einkauf von Büromaterial und Lizenzen zählt zu …","Einkauf = Beschaffung, eine unterstützende Aktivität.","Beschaffung (unterstützend)","Inbound-Logistik (primär)","Service (primär)","Infrastruktur (primär)"],
+["Personalwirtschaft (HR, Einstellung, Schulung) ist eine primäre Aktivität.",false,"Falsch: Sie ist unterstützend („hinter den Kulissen“)."],
+["Primäre Aktivitäten arbeiten direkt am Produkt bzw. am Kunden.",true,"Richtig: Unterstützende Aktivitäten laufen dagegen hinter den Kulissen."],
+["Was misst die Produktivität?","Produktivität misst Mengen (Stück/Stunden), Wirtschaftlichkeit misst Geld (€/€).","Mengen (z. B. Stück pro Stunde)","Geld (€ pro €)","Nur den Gewinn","Nur das Eigenkapital"],
+["Wie lautet die Formel der Produktivität?","Produktivität = Ausbringungsmenge (Output) / Einsatzmenge (Input).","Ausbringungsmenge / Einsatzmenge","Ertrag / Aufwand","Gewinn / Eigenkapital","Gewinn / Umsatz"],
+["50 PCs werden in 10 Stunden gebaut. Wie hoch ist die Produktivität?","50 PCs / 10 Stunden = 5 PCs pro Stunde.","5 PCs pro Stunde","0,2 PCs pro Stunde","500 PCs pro Stunde","60 PCs pro Stunde"],
+["Wie lautet die Formel der Wirtschaftlichkeit?","Wirtschaftlichkeit = Ertrag (Umsatzerlöse in €) / Aufwand (Kosten in €).","Ertrag / Aufwand","Output / Input","(Gewinn / Umsatz) × 100","EK + FK"],
+["Eine Wirtschaftlichkeit größer als 1,0 bedeutet Gewinn.",true,"Richtig: Der Ertrag ist dann größer als der Aufwand."],
+["Ertrag 120.000 €, Aufwand 100.000 €. Wie hoch ist die Wirtschaftlichkeit?","120.000 / 100.000 = 1,2. Wert > 1,0 = Gewinn.","1,2","0,83","20.000","1,0"],
+["Eine Wirtschaftlichkeit von 0,9 bedeutet …","Ertrag < Aufwand, also Verlust.","Verlust (Aufwand größer als Ertrag)","Gewinn","Genau kostendeckend","Das ist nicht berechenbar"],
+["Wie berechnet man das Gesamtkapital (GK)?","GK = Eigenkapital (EK) + Fremdkapital (FK).","Eigenkapital + Fremdkapital","Eigenkapital − Fremdkapital","Gewinn + Abschreibungen","Umsatz − Aufwand"],
+["EK 150.000 €, FK 250.000 €. Wie hoch ist das Gesamtkapital?","150.000 + 250.000 = 400.000 €.","400.000 €","100.000 €","37.500 €","150.000 €"],
+["Wie lautet die Formel der Eigenkapitalrentabilität (EKR)?","EKR = (Gewinn / Eigenkapital) × 100.","(Gewinn / Eigenkapital) × 100","(Gewinn / Umsatz) × 100","((Gewinn + FK-Zinsen) / GK) × 100","Gewinn + Abschreibungen"],
+["Wie lautet die Formel der Gesamtkapitalrentabilität (GKR)?","GKR = ((Gewinn + FK-Zinsen) / Gesamtkapital) × 100.","((Gewinn + FK-Zinsen) / Gesamtkapital) × 100","(Gewinn / Eigenkapital) × 100","(Gewinn / Umsatz) × 100","Ertrag / Aufwand"],
+["Wie lautet die Formel der Umsatzrentabilität (UR)?","UR = (Gewinn / Umsatz) × 100.","(Gewinn / Umsatz) × 100","(Gewinn / Eigenkapital) × 100","((Gewinn + FK-Zinsen) / GK) × 100","Umsatz − Gewinn"],
+["Gewinn 20.000 €, EK 200.000 €. Wie hoch ist die EKR?","20.000 / 200.000 × 100 = 10 %.","10 %","1 %","100 %","0,1 %"],
+["Gewinn 15.000 €, Umsatz 300.000 €. Wie hoch ist die UR?","15.000 / 300.000 × 100 = 5 %.","5 %","20 %","0,5 %","50 %"],
+["Gewinn 30.000 €, FK-Zinsen 10.000 €, GK 400.000 €. Wie hoch ist die GKR?","(30.000 + 10.000) / 400.000 × 100 = 10 %. Ohne die Zinsen (7,5 %) wäre es falsch.","10 %","7,5 %","12,5 %","75 %"],
+["Wie berechnet man den Cashflow (vereinfacht)?","Cashflow = Jahresüberschuss (Gewinn) + Abschreibungen.","Jahresüberschuss + Abschreibungen","Jahresüberschuss − Abschreibungen","Umsatz − Gewinn","EK + FK"],
+["Gewinn 40.000 €, Abschreibungen 15.000 €. Wie hoch ist der Cashflow?","40.000 + 15.000 = 55.000 €.","55.000 €","25.000 €","40.000 €","600.000 €"],
+["Die Eigenkapitalrentabilität bezieht den Gewinn auf das Gesamtkapital.",false,"Falsch: Die EKR bezieht sich auf das Eigenkapital. Beim Gesamtkapital spricht man von der GKR."]
+];
+const N=30,$=id=>document.getElementById(id);
+const sh=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a};
+const norm=r=>{if(typeof r[1]==="boolean")return{q:r[0],e:r[2],o:["Richtig","Falsch"],c:r[1]?0:1};const o=sh(r.slice(2));return{q:r[0],e:r[1],o,c:o.indexOf(r[2])}};
+let run,i,score,wrong,cur;
+$("n").textContent=Q.length;
+const show=id=>["start","quiz","end"].forEach(x=>$(x).classList.toggle("hide",x!==id));
+function start(){run=sh(Q).slice(0,N).map(norm);i=0;score=0;wrong=[];show("quiz");render();window.scrollTo(0,0)}
+function render(){
+ cur=run[i];
+ $("cnt").textContent="Frage "+(i+1)+" von "+run.length;
+ $("sc").textContent=score+" richtig";
+ $("pb").style.width=(i/run.length*100)+"%";
+ $("q").textContent=cur.q;
+ $("fb").className="hide";$("next").classList.add("hide");
+ $("opts").innerHTML="";
+ cur.o.forEach((t,k)=>{const b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=()=>answer(k);$("opts").appendChild(b)});
+}
+function answer(k){
+ const ok=k===cur.c,bs=$("opts").children;
+ for(let j=0;j<bs.length;j++){bs[j].disabled=true;if(j===cur.c)bs[j].classList.add("ok");else if(j===k)bs[j].classList.add("no")}
+ if(ok)score++;else wrong.push({q:cur.q,mine:cur.o[k],right:cur.o[cur.c],e:cur.e});
+ const fb=$("fb");fb.className="fb "+(ok?"ok":"no");
+ fb.innerHTML="<b>"+(ok?"Richtig!":"Leider falsch.")+"</b>"+(ok?"":"Deine Antwort „"+cur.o[k]+"“ stimmt nicht. Richtig ist: „"+cur.o[cur.c]+"“.<br>")+cur.e;
+ $("sc").textContent=score+" richtig";
+ $("next").textContent=i===run.length-1?"Zur Auswertung":"Weiter";
+ $("next").classList.remove("hide");$("next").focus();
+}
+function next(){i++;if(i>=run.length)finish();else render()}
+function finish(){
+ show("end");const p=Math.round(score/run.length*100);
+ $("res").textContent=score+" / "+run.length+" ("+p+" %)";
+ $("msg").textContent=p>=90?"Sehr stark, du bist bereit für die Klausur.":p>=70?"Gut, schau dir noch die Fehler unten an.":p>=50?"Solide Basis, aber wiederhole die falschen Themen.":"Noch Luft nach oben: Spickzettel durchgehen und neu starten.";
+ $("wl").innerHTML=wrong.length?"<p><b>Das solltest du wiederholen:</b></p>"+wrong.map(w=>"<div class='w'><b>"+w.q+"</b><br><span style='color:var(--no)'>Du: "+w.mine+"</span><br><span style='color:var(--ok)'>Richtig: "+w.right+"</span><br><span class='mu'>"+w.e+"</span></div>").join(""):"<p>Keine Fehler. Perfekt!</p>";
+ window.scrollTo(0,0);
+}
+$("go").onclick=start;$("again").onclick=start;$("next").onclick=next;
+</script>
+</body>
+</html>
